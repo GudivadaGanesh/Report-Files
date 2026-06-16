@@ -489,8 +489,7 @@ case "$FINAL_RESULT" in
     exit 0
     ;;
   *)
-    echo "BUILD STATUS: FAILED (tests failed — see report)"
-    echo "Exiting with 0 to prevent Buildkite auto-retry from creating duplicate Testsigma runs."
-    exit 0
+    echo "BUILD STATUS: FAILED (tests failed — check the HTML report in Artifacts)"
+    exit 1
     ;;
 esac

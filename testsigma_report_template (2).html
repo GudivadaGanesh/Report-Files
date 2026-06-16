@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Testsigma Test Run Report</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #f0f2f5;
+      color: #1a1a2e;
+      min-height: 100vh;
+    }
+
+    /* ── Header ── */
+    .header {
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+      color: #fff;
+      padding: 28px 40px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+    }
+    .header-left { display: flex; align-items: center; gap: 14px; }
+    .logo {
+      width: 42px; height: 42px; border-radius: 10px;
+      background: linear-gradient(135deg, #e94560, #0f3460);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 20px; font-weight: 800; color: #fff;
+    }
+    .header h1 { font-size: 22px; font-weight: 700; letter-spacing: -0.3px; }
+    .header p  { font-size: 13px; color: rgba(255,255,255,0.6); margin-top: 2px; }
+    .header-meta { text-align: right; font-size: 12px; color: rgba(255,255,255,0.55); line-height: 1.7; }
+    .header-meta strong { color: #fff; font-weight: 600; }
+
+    /* ── Demo Banner ── */
+    .demo-banner {
+      background: #fef3c7; color: #92400e;
+      border-left: 4px solid #f59e0b;
+      padding: 12px 40px; font-size: 13px;
+      display: flex; align-items: center; gap: 8px;
+    }
+    .demo-banner strong { font-weight: 700; }
+
+    /* ── Summary Cards ── */
+    .summary-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 16px;
+      padding: 28px 40px 0;
+    }
+    .card {
+      background: #fff;
+      border-radius: 14px;
+      padding: 20px 22px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.07);
+      border-top: 4px solid transparent;
+      transition: transform .15s;
+    }
+    .card:hover { transform: translateY(-2px); }
+    .card.total   { border-color: #6c63ff; }
+    .card.passed  { border-color: #10b981; }
+    .card.failed  { border-color: #ef4444; }
+    .card.stopped { border-color: #f59e0b; }
+    .card.not-run { border-color: #94a3b8; }
+    .card .label  { font-size: 11px; font-weight: 600; text-transform: uppercase;
+                    letter-spacing: .8px; color: #64748b; margin-bottom: 8px; }
+    .card .value  { font-size: 36px; font-weight: 800; line-height: 1; }
+    .card.total   .value { color: #6c63ff; }
+    .card.passed  .value { color: #10b981; }
+    .card.failed  .value { color: #ef4444; }
+    .card.stopped .value { color: #f59e0b; }
+    .card.not-run .value { color: #94a3b8; }
+
+    /* ── Progress Bar ── */
+    .progress-section {
+      padding: 20px 40px 0;
+    }
+    .progress-bar {
+      height: 10px; border-radius: 99px; background: #e2e8f0;
+      overflow: hidden; display: flex;
+    }
+    .progress-bar span {
+      display: block; height: 100%;
+      transition: width .6s cubic-bezier(.4,0,.2,1);
+    }
+    .bar-passed  { background: #10b981; }
+    .bar-failed  { background: #ef4444; }
+    .bar-stopped { background: #f59e0b; }
+    .bar-notrun  { background: #cbd5e1; }
+    .progress-legend {
+      display: flex; gap: 18px; margin-top: 8px; font-size: 11px; color: #64748b; font-weight: 500;
+    }
+    .progress-legend span { display: flex; align-items: center; gap: 5px; }
+    .dot { width: 9px; height: 9px; border-radius: 50%; display: inline-block; }
+
+    /* ── Meta Info ── */
+    .meta-section {
+      padding: 20px 40px 0;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 12px;
+    }
+    .meta-card {
+      background: #fff; border-radius: 12px;
+      padding: 14px 18px;
+      box-shadow: 0 1px 6px rgba(0,0,0,0.06);
+      display: flex; align-items: center; gap: 12px;
+    }
+    .meta-icon {
+      width: 36px; height: 36px; border-radius: 9px;
+      background: #f1f5f9; display: flex; align-items: center;
+      justify-content: center; font-size: 17px; flex-shrink: 0;
+    }
+    .meta-label { font-size: 11px; color: #94a3b8; font-weight: 500; text-transform: uppercase; letter-spacing: .5px; }
+    .meta-value { font-size: 14px; font-weight: 600; color: #1e293b; margin-top: 2px; word-break: break-all; }
+
+    /* ── Section Headers ── */
+    .section-header {
+      padding: 24px 40px 12px;
+      font-size: 15px; font-weight: 700; color: #1e293b;
+      display: flex; align-items: center; gap: 8px;
+    }
+
+    /* ── Table ── */
+    .table-wrap { padding: 0 40px 40px; overflow-x: auto; }
+    table {
+      width: 100%; border-collapse: collapse;
+      background: #fff; border-radius: 14px; overflow: hidden;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.07);
+      font-size: 13px;
+    }
+    thead tr { background: #f8fafc; }
+    th {
+      padding: 13px 16px; text-align: left;
+      font-size: 11px; font-weight: 700; text-transform: uppercase;
+      letter-spacing: .7px; color: #64748b;
+      border-bottom: 2px solid #e2e8f0;
+    }
+    td { padding: 12px 16px; border-bottom: 1px solid #f1f5f9; color: #374151; vertical-align: middle; }
+    tbody tr:last-child td { border-bottom: none; }
+    tbody tr:hover { background: #fafbfc; }
+
+    /* ── Status Badges ── */
+    .badge {
+      display: inline-flex; align-items: center; gap: 5px;
+      padding: 4px 10px; border-radius: 99px;
+      font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .5px;
+    }
+    .badge::before { content: ''; width: 6px; height: 6px; border-radius: 50%; }
+    .badge-passed  { background: #d1fae5; color: #065f46; }
+    .badge-passed::before  { background: #10b981; }
+    .badge-failed  { background: #fee2e2; color: #991b1b; }
+    .badge-failed::before  { background: #ef4444; }
+    .badge-stopped { background: #fef3c7; color: #92400e; }
+    .badge-stopped::before { background: #f59e0b; }
+    .badge-not-run { background: #f1f5f9; color: #475569; }
+    .badge-not-run::before { background: #94a3b8; }
+    .badge-queued  { background: #ede9fe; color: #5b21b6; }
+    .badge-queued::before  { background: #7c3aed; }
+
+    /* ── Overall Result Banner ── */
+    .result-banner {
+      margin: 20px 40px 0;
+      padding: 16px 24px;
+      border-radius: 12px;
+      display: flex; align-items: center; gap: 12px;
+      font-weight: 700; font-size: 15px;
+    }
+    .result-banner.success { background: #d1fae5; color: #065f46; border-left: 4px solid #10b981; }
+    .result-banner.failure { background: #fee2e2; color: #991b1b; border-left: 4px solid #ef4444; }
+    .result-banner.running { background: #ede9fe; color: #5b21b6; border-left: 4px solid #7c3aed; }
+    .result-banner .icon   { font-size: 22px; }
+
+    /* ── Footer ── */
+    .footer {
+      text-align: center; padding: 20px;
+      font-size: 12px; color: #94a3b8;
+    }
+
+    /* ── Error / Empty ── */
+    .empty { text-align: center; padding: 60px 20px; color: #94a3b8; }
+    .empty .icon { font-size: 48px; margin-bottom: 12px; }
+  </style>
+</head>
+<body>
+
+<!-- Populated by generate_html_report() in testsigma_cicd.sh -->
+<div id="report-root">
+  <div class="empty"><div class="icon">⏳</div><p>Loading report...</p></div>
+</div>
+
+<script>
+/* ─────────────────────────────────────────────
+   DATA INJECTION POINT
+   The shell script replaces the null below with
+   the real parsed JSON object from the v2 API.
+   When opened directly (null stays), the demo
+   dataset is shown so the layout is visible.
+───────────────────────────────────────────── */
+var INJECTED_DATA = /*TESTSIGMA_JSON_PLACEHOLDER*/null/*END_PLACEHOLDER*/;
+
+var DEMO_DATA = {
+  "id": "DEMO-001",
+  "executionName": "Sample Regression Suite \u2014 Demo Preview",
+  "buildNo": "DEMO-BUILD",
+  "result": "FAILURE",
+  "status": "STATUS_COMPLETED",
+  "startTime": "2026-05-26T10:00:00Z",
+  "endTime":   "2026-05-26T10:18:00Z",
+  "duration":  "18 mins 12 secs",
+  "environmentName": "Chrome 124 / macOS",
+  "totalCount": 10, "passedCount": 7, "failedCount": 2, "stoppedCount": 1, "notExecutedCount": 0,
+  "testCaseResults": [
+    {"testCaseName":"Login with valid credentials",  "testSuiteName":"Auth Suite",    "machineName":"Windows Chrome", "result":"SUCCESS",      "errorMessage":""},
+    {"testCaseName":"Login with invalid password",   "testSuiteName":"Auth Suite",    "machineName":"Windows Chrome", "result":"SUCCESS",      "errorMessage":""},
+    {"testCaseName":"Forgot password flow",          "testSuiteName":"Auth Suite",    "machineName":"Windows Chrome", "result":"SUCCESS",      "errorMessage":""},
+    {"testCaseName":"Add item to cart",              "testSuiteName":"Cart Suite",    "machineName":"Windows Chrome", "result":"SUCCESS",      "errorMessage":""},
+    {"testCaseName":"Remove item from cart",         "testSuiteName":"Cart Suite",    "machineName":"Windows Chrome", "result":"SUCCESS",      "errorMessage":""},
+    {"testCaseName":"Apply discount coupon",         "testSuiteName":"Cart Suite",    "machineName":"Windows Chrome", "result":"FAILURE",      "errorMessage":"AssertionError: Expected discount 10% but got 0%"},
+    {"testCaseName":"Checkout with credit card",     "testSuiteName":"Payment Suite", "machineName":"Windows Chrome", "result":"FAILURE",      "errorMessage":"TimeoutException: Payment gateway did not respond within 5s"},
+    {"testCaseName":"Checkout with PayPal",          "testSuiteName":"Payment Suite", "machineName":"Windows Chrome", "result":"STOPPED",      "errorMessage":""},
+    {"testCaseName":"Order confirmation email sent", "testSuiteName":"Post-Order",    "machineName":"Windows Chrome", "result":"SUCCESS",      "errorMessage":""},
+    {"testCaseName":"Invoice PDF download",          "testSuiteName":"Post-Order",    "machineName":"Windows Chrome", "result":"NOT_EXECUTED", "errorMessage":""}
+  ]
+};
+
+var IS_DEMO = (INJECTED_DATA === null);
+var REPORT_DATA = IS_DEMO ? DEMO_DATA : INJECTED_DATA;
+
+function buildReport(data, isDemo) {
+  const root = document.getElementById('report-root');
+
+  /* ── helpers ── */
+  const esc = s => String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  const fmt = s => s ? new Date(s).toLocaleString() : '—';
+  const num = (n, fallback = 0) => Number(n ?? fallback);
+
+  /* ── counts ──
+     The Testsigma v1 API always returns null for top-level
+     totalCount/passedCount etc. Real counts come from
+     testPlanResultMetric, which Python merges in before injection.
+     (Demo data has them at the top level — both paths are checked.) */
+  const metric   = data.testPlanResultMetric ?? {};
+  const total    = num(data.totalCount   ?? metric.totalCount);
+  const passed   = num(data.passedCount  ?? metric.passedCount);
+  const failed   = num(data.failedCount  ?? metric.failedCount);
+  const stopped  = num(data.stoppedCount ?? metric.stoppedCount);
+  const notRun   = num(data.notExecutedCount ?? metric.notExecutedCount
+                       ?? (total - passed - failed - stopped));
+
+  const pct = v => total > 0 ? ((v / total) * 100).toFixed(1) : 0;
+
+  /* ── overall result ──
+     API result values: SUCCESS | FAILURE | NOT_EXECUTED | STOPPED */
+  const result    = (data.result ?? data.status ?? '').toString().toUpperCase();
+  const isPass    = result === 'SUCCESS';
+  const isFail    = result === 'FAILURE';
+  const bannerCls = isPass ? 'success' : isFail ? 'failure' : 'running';
+  const bannerIcon = isPass ? '✅' : isFail ? '❌' : '🔄';
+  const bannerText = isPass ? 'All tests passed successfully'
+                  : isFail ? `${failed} test(s) failed`
+                  : 'Test run in progress / queued';
+
+  /* ── test case rows ── */
+  const cases = data.testCaseResults ?? [];
+
+  /* Badge mapping:
+     API values  → display class
+     SUCCESS     → passed  (green)
+     FAILURE     → failed  (red)
+     NOT_EXECUTED→ not-run (grey)
+     STOPPED     → stopped (amber) */
+  function badgeFor(s) {
+    switch ((s ?? '').toString().toUpperCase()) {
+      case 'SUCCESS':      return 'passed';
+      case 'FAILURE':      return 'failed';
+      case 'STOPPED':      return 'stopped';
+      case 'NOT_EXECUTED': return 'not-run';
+      default:             return 'not-run';
+    }
+  }
+
+  function labelFor(s) {
+    switch ((s ?? '').toString().toUpperCase()) {
+      case 'SUCCESS':      return 'Passed';
+      case 'FAILURE':      return 'Failed';
+      case 'STOPPED':      return 'Stopped';
+      case 'NOT_EXECUTED': return 'Not Run';
+      default:             return s || 'N/A';
+    }
+  }
+
+  function fmtDuration(ms) {
+    if (ms == null) return '—';
+    if (ms < 1000)  return ms + 'ms';
+    return (ms / 1000).toFixed(1) + 's';
+  }
+
+  function renderRows(list) {
+    if (!list || list.length === 0)
+      return `<tr><td colspan="5" style="text-align:center;padding:40px;color:#94a3b8">📭 No test case results available</td></tr>`;
+
+    return list.map((tc, i) => {
+      const name    = esc(tc.testCaseName  ?? `Test Case ${i+1}`);
+      const suite   = esc(tc.testSuiteName ?? '—');
+      const machine = esc(tc.machineName   ?? '—');
+      const cls     = badgeFor(tc.result);
+      const label   = labelFor(tc.result);
+      const errMsg  = esc(tc.errorMessage  ?? '');
+      return `
+        <tr>
+          <td style="font-weight:600;color:#1e293b">${name}</td>
+          <td style="color:#64748b">${suite}</td>
+          <td style="color:#64748b;font-size:12px">${machine}</td>
+          <td><span class="badge badge-${cls}">${label}</span></td>
+          <td style="color:#ef4444;font-size:12px;max-width:260px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${errMsg}">${errMsg || '—'}</td>
+        </tr>`;
+    }).join('');
+  }
+
+  /* ── build HTML ── */
+  root.innerHTML = `
+    <div class="header">
+      <div class="header-left">
+        <div class="logo">TS</div>
+        <div>
+          <h1>Test Run Report</h1>
+          <p>${esc(data.executionName ?? data.name ?? 'Testsigma Execution')}</p>
+        </div>
+      </div>
+      <div class="header-meta">
+        <div>Run ID: <strong>${esc(data.id ?? data.runId ?? '—')}</strong></div>
+        <div>Build: <strong>${esc(data.buildNo ?? data.build_no ?? '—')}</strong></div>
+        <div>Generated: <strong>${new Date().toLocaleString()}</strong></div>
+      </div>
+    </div>
+
+    ${isDemo ? `<div class="demo-banner">⚠️ &nbsp;<strong>Demo Preview Mode</strong> — This is sample data. Run the CI/CD shell script to generate a report with real test results.</div>` : ''}
+
+    <div class="result-banner ${bannerCls}">
+      <span class="icon">${bannerIcon}</span>
+      <span>${bannerText}</span>
+    </div>
+
+    <div class="summary-grid">
+      <div class="card total">  <div class="label">Total</div>  <div class="value">${total}</div>  </div>
+      <div class="card passed"> <div class="label">Passed</div> <div class="value">${passed}</div> </div>
+      <div class="card failed"> <div class="label">Failed</div> <div class="value">${failed}</div> </div>
+      <div class="card stopped"><div class="label">Stopped</div><div class="value">${stopped}</div></div>
+      <div class="card not-run"><div class="label">Not Run</div><div class="value">${notRun}</div></div>
+    </div>
+
+    <div class="progress-section">
+      <div class="progress-bar">
+        <span class="bar-passed"  style="width:${pct(passed)}%"></span>
+        <span class="bar-failed"  style="width:${pct(failed)}%"></span>
+        <span class="bar-stopped" style="width:${pct(stopped)}%"></span>
+        <span class="bar-notrun"  style="width:${pct(notRun)}%"></span>
+      </div>
+      <div class="progress-legend">
+        <span><i class="dot" style="background:#10b981"></i> Passed ${pct(passed)}%</span>
+        <span><i class="dot" style="background:#ef4444"></i> Failed ${pct(failed)}%</span>
+        <span><i class="dot" style="background:#f59e0b"></i> Stopped ${pct(stopped)}%</span>
+        <span><i class="dot" style="background:#cbd5e1"></i> Not Run ${pct(notRun)}%</span>
+      </div>
+    </div>
+
+    <div class="meta-section">
+      <div class="meta-card"><div class="meta-icon">🗓️</div><div><div class="meta-label">Start Time</div><div class="meta-value">${fmt(data.startTime ?? data.start_time ?? data.executionInitiatedOn)}</div></div></div>
+      <div class="meta-card"><div class="meta-icon">🏁</div><div><div class="meta-label">End Time</div><div class="meta-value">${fmt(data.endTime ?? data.end_time ?? data.executionCompletedOn)}</div></div></div>
+      <div class="meta-card"><div class="meta-icon">⏱️</div><div><div class="meta-label">Duration</div><div class="meta-value">${esc(data.duration ?? data.totalDuration ?? '—')}</div></div></div>
+      <div class="meta-card"><div class="meta-icon">🌍</div><div><div class="meta-label">Environment</div><div class="meta-value">${esc(data.environmentName ?? data.environment ?? '—')}</div></div></div>
+    </div>
+
+    <div class="section-header">📋 Test Case Results</div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Test Case</th>
+            <th>Suite</th>
+            <th>Machine</th>
+            <th>Result</th>
+            <th>Error</th>
+          </tr>
+        </thead>
+        <tbody>${renderRows(cases)}</tbody>
+      </table>
+    </div>
+
+    <div class="footer">Generated by Testsigma CI/CD Script &nbsp;·&nbsp; ${new Date().toLocaleString()}</div>
+  `;
+}
+
+/* ── boot ── */
+try {
+  buildReport(REPORT_DATA, IS_DEMO);
+} catch(e) {
+  document.getElementById('report-root').innerHTML =
+    `<div class="empty"><div class="icon">💥</div><p>Failed to render report:<br><code>${e.message}</code></p></div>`;
+}
+</script>
+</body>
+</html>

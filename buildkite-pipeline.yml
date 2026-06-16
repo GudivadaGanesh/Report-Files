@@ -1,0 +1,16 @@
+# Testsigma Test Plan — Buildkite Pipeline
+# Place this file at: .buildkite/pipeline.yml in your repo
+#
+# Required files in repo root:
+#   - testsigma-trigger.sh
+#   - testsigma_report_template.html
+
+steps:
+  - label: ":testtube: Run Testsigma Test Plan"
+    command:
+      - "chmod +x testsigma-trigger.sh"
+      - "./testsigma-trigger.sh"
+    artifact_paths:
+      - "junit-report.xml"
+      - "testsigma.json"
+      - "testsigma-report.html"

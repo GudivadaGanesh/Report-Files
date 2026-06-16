@@ -202,10 +202,22 @@ if total == 0 and cases:
 result  = (m.get('result') or v2.get('result') or 'UNKNOWN').upper()
 run_id  = str(v2.get('id') or '-')
 build   = str(v2.get('buildNo') or '-')
-start   = str(v2.get('startTime') or '-')
-end     = str(v2.get('endTime')   or '-')
+def fmt_utc(s):
+    if not s or s == '-': return '-'
+    try:
+        s2 = s.replace('Z', '+00:00')
+        try:
+            dt = datetime.datetime.fromisoformat(s2)
+        except Exception:
+            dt = datetime.datetime.strptime(s[:19], '%Y-%m-%dT%H:%M:%S').replace(tzinfo=datetime.timezone.utc)
+        return dt.astimezone().strftime('%d %b %Y %H:%M:%S %Z')
+    except Exception:
+        return s
+
+start   = fmt_utc(v2.get('startTime') or '')
+end     = fmt_utc(v2.get('endTime')   or '')
 dur_ms  = m.get('duration')
-now     = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+now     = datetime.datetime.now().strftime('%d %b %Y %H:%M:%S %Z')
 
 def e(s):
     return str(s).replace('&','&amp;').replace('<','&lt;').replace('>','&gt;').replace('"','&quot;')
@@ -462,12 +474,23 @@ echo "Artifacts written:"
 ls -lh "$JUNIT_REPORT_FILE_PATH" "$JSON_REPORT_FILE_PATH" "$HTML_REPORT_FILE_PATH" 2>/dev/null || true
 echo "************ Testsigma: Completed ************"
 
+# Always exit 0 so Buildkite does NOT auto-retry the job on test failure.
+# Auto-retry on exit 1 is what caused multiple Testsigma runs when tests failed.
+# The build result (pass/fail) is visible in the artifacts and the log output above.
+# If the script itself had a setup error (not a test failure), exit 1 is still used above.
 if [ "$IS_COMPLETED" -eq 0 ]; then
   echo "TIMEOUT: Run did not complete within ${MAX_WAIT_TIME_FOR_SCRIPT_TO_EXIT} minutes."
   exit 1
 fi
 
 case "$FINAL_RESULT" in
-  *SUCCESS*) exit 0 ;;
-  *)         exit 1 ;;
+  *SUCCESS*)
+    echo "BUILD STATUS: PASSED"
+    exit 0
+    ;;
+  *)
+    echo "BUILD STATUS: FAILED (tests failed — see report)"
+    echo "Exiting with 0 to prevent Buildkite auto-retry from creating duplicate Testsigma runs."
+    exit 0
+    ;;
 esac
